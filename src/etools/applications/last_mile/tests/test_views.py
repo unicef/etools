@@ -19,6 +19,7 @@ from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.last_mile import models
 from etools.applications.last_mile.serializers import PointOfInterestNotificationSerializer
 from etools.applications.last_mile.tests.factories import (
+    DispensingPointTypeFactory,
     ItemAuditConfigurationFactory,
     ItemFactory,
     MaterialFactory,
@@ -49,6 +50,69 @@ class TestPointOfInterestTypeView(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 10)
+
+
+class TestDispensingPointTypeView(BaseTenantTestCase):
+    url = reverse('last_mile:dispensing-types-list')
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.partner_staff = UserFactory(
+            realms__data=['IP LM Editor'],
+            profile__organization=cls.partner.organization,
+        )
+
+    def setUp(self):
+        models.DispensingPointType.objects.all().delete()
+
+    def test_list_dispensing_types(self):
+        DispensingPointTypeFactory(name='PHARMACY', label='pharmacy', applicability=[1])
+        DispensingPointTypeFactory(name='MOBILE_OTP', label='mobile_otp', applicability=[1])
+        DispensingPointTypeFactory(name='DISPENSING_UNIT', label='dispensing_unite', applicability=[1, 2])
+
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        names = [d['name'] for d in response.data]
+        self.assertIn('PHARMACY', names)
+        self.assertIn('MOBILE_OTP', names)
+        self.assertIn('DISPENSING_UNIT', names)
+
+    def test_response_fields(self):
+        DispensingPointTypeFactory(name='PHARMACY', label='pharmacy', applicability=[1])
+
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        entry = response.data[0]
+        self.assertIn('id', entry)
+        self.assertIn('name', entry)
+        self.assertIn('label', entry)
+        self.assertIn('applicability', entry)
+        self.assertIn('display_name', entry)
+        self.assertEqual(entry['name'], 'PHARMACY')
+        self.assertEqual(entry['label'], 'pharmacy')
+        self.assertEqual(entry['applicability'], [1])
+        self.assertEqual(entry['display_name'], 'Pharmacy')
+
+    def test_inactive_types_excluded(self):
+        DispensingPointTypeFactory(name='PHARMACY', label='pharmacy', is_active=True)
+        DispensingPointTypeFactory(name='INACTIVE_TYPE', label='inactive', is_active=False)
+
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['name'], 'PHARMACY')
+
+    def test_read_only(self):
+        response = self.forced_auth_req(
+            'post', self.url, user=self.partner_staff,
+            data={'name': 'NEW_TYPE', 'label': 'new_type', 'applicability': [1]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class TestHandoverPartnersListView(BaseTenantTestCase):
@@ -857,6 +921,36 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
         self.assertIn(f'D @ {checkout_data["origin_check_out_at"].strftime("%y-%m-%d")}', dispense_transfer.name)
+
+    def test_checkout_dispense_with_dispense_type(self):
+        pharmacy_type, _ = models.DispensingPointType.objects.get_or_create(
+            name='PHARMACY', defaults={'label': 'pharmacy', 'applicability': [1]}
+        )
+        item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
+
+        destination = PointOfInterestFactory()
+        checkout_data = {
+            "transfer_type": models.Transfer.DISPENSE,
+            "destination_point": destination.pk,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "dispense_type": "PHARMACY",
+            "items": [
+                {"id": item_1.pk, "quantity": 5}
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
+
+        mock_send = Mock()
+        with patch("etools.applications.last_mile.tasks.send_notification", mock_send):
+            response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['dispense_type'], 'PHARMACY')
+
+        dispense_transfer = models.Transfer.objects.get(pk=response.data['id'])
+        self.assertEqual(dispense_transfer.dispense_type, pharmacy_type)
 
     def test_checkout_handover(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)

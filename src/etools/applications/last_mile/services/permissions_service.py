@@ -2,7 +2,7 @@ from django.contrib.auth.models import Group, Permission
 
 from etools.applications.last_mile.admin_panel.constants import (
     LIST_INTERESTED_LASTMILE_PERMS,
-    LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE,
+    LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN,
 )
 from etools.applications.users.models import Realm
 
@@ -19,7 +19,7 @@ class LMSMPermissionsService:
     LMSM_GROUPS = [LMSM_CO_ADMIN, LMSM_HQ_ADMIN, IP_LM_EDITOR, LMSMAPI, IP_LM_VIEWR, LMSM_ADMIN_PANEL, LMSM_CO_VIEWER]
 
     def assign_permissions_for_co_admin(self, user):
-        permissions = Permission.objects.filter(codename__in=LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE)
+        permissions = Permission.objects.filter(codename__in=LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN)
         if permissions:
             user.user_permissions.add(*permissions)
 
@@ -132,7 +132,7 @@ class LMSMPermissionsService:
             user.user_permissions.remove(*permissions)
 
     def remove_approve_permissions(self, user):
-        approve_perms = set(LIST_INTERESTED_LASTMILE_PERMS) - set(LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE)
+        approve_perms = set(LIST_INTERESTED_LASTMILE_PERMS) - set(LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN)
         permissions = Permission.objects.filter(codename__in=approve_perms)
         if permissions.exists():
             user.user_permissions.remove(*permissions)

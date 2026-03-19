@@ -9,6 +9,7 @@ from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_restlib.serializers import UserContextSerializerMixin
 
+from etools.applications.field_monitoring.data_collection.dynamic_options import get_dynamic_options_pairs
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
     ActivityQuestion,
@@ -181,6 +182,17 @@ class ActivityQuestionOverallFindingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityQuestionOverallFinding
         fields = ('id', 'activity_question', 'value',)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        dynamic_options_type, level, target = instance.get_level_and_target()
+        if not dynamic_options_type or not level or not target:
+            return data
+        pairs = get_dynamic_options_pairs(dynamic_options_type, level, target)
+        data['activity_question']['question']['options'] = [
+            {'value': v, 'label': l} for v, l in pairs
+        ]
+        return data
 
 
 class ChecklistAttachmentSerializer(FMCommonAttachmentSerializer):

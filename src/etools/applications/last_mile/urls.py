@@ -11,6 +11,7 @@ root_api = routers.SimpleRouter()
 root_api.register(r'partners', views.HandoverPartnerListViewSet, basename='partners')
 root_api.register(r'points-of-interest', views.PointOfInterestViewSet, basename='pois')
 root_api.register(r'poi-types', views.PointOfInterestTypeViewSet, basename='poi-types')
+root_api.register(r'dispensing-types', views.DispensingPointTypeViewSet, basename='dispensing-types')
 root_api.register(r'items', views.ItemUpdateViewSet, basename='item-update')
 
 transfer_api = NestedComplexRouter(root_api, r'points-of-interest', lookup='point_of_interest')

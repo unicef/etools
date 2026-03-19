@@ -8,6 +8,17 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
+class DispensingPointTypeFactory(factory.django.DjangoModelFactory):
+    name = factory.Sequence(lambda n: 'DISPENSING_TYPE_{}'.format(n))
+    label = factory.Sequence(lambda n: 'dispensing_type_{}'.format(n))
+    applicability = [1, 2]
+    is_active = True
+    order = factory.Sequence(lambda n: n * 10)
+
+    class Meta:
+        model = models.DispensingPointType
+
+
 class PointOfInterestTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.PointOfInterestType
