@@ -933,7 +933,7 @@ class TestTransferView(BaseTenantTestCase):
             "transfer_type": models.Transfer.DISPENSE,
             "destination_point": destination.pk,
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "dispense_type": "PHARMACY",
             "items": [
                 {"id": item_1.pk, "quantity": 5}
