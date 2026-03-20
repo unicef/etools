@@ -426,7 +426,6 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
                 raise serializers.ValidationError(
                     {'ewp_activities': _('activities at index %(i)s must be a list.') % {'i': i}}
                 )
-
             validated_activities = self._validate_string_list(
                 activities,
                 'ewp_activities',
@@ -584,6 +583,15 @@ class CPOutputListSerializer(MinimalOutputListSerializer):
             return f'{prefix}{obj.name}-[{obj.wbs}]'
 
         return obj.result_name
+
+
+class FMActivityOptionSerializer(serializers.ModelSerializer):
+    cp_output_id = serializers.IntegerField(source='parent_id', read_only=True)
+    cp_output_name = serializers.CharField(source='parent.name', read_only=True)
+
+    class Meta:
+        model = Result
+        fields = ('id', 'wbs', 'name', 'cp_output_id', 'cp_output_name')
 
 
 class InterventionWithLinkedInstancesSerializer(FMInterventionListSerializer):

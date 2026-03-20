@@ -1501,6 +1501,37 @@ class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantT
         self._test_list(tpm_staff, [])
 
 
+class FMActivityOptionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
+    base_view = 'field_monitoring_planning:activity_options'
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list_only_activity_results(self):
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+        activity_1 = ResultFactory(result_type__name=ResultType.ACTIVITY, parent=cp_output, wbs='A-WBS-001')
+        activity_2 = ResultFactory(result_type__name=ResultType.ACTIVITY, parent=cp_output, wbs='A-WBS-002')
+        ResultFactory(result_type__name=ResultType.OUTPUT)
+        ResultFactory(result_type__name=ResultType.OUTCOME)
+
+        response = self._test_list(self.unicef_user, [activity_1, activity_2])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)
+        for item in response.data['results']:
+            self.assertIn('wbs', item)
+            self.assertIn('cp_output_id', item)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_by_cp_output_ids(self):
+        cp_output_1 = ResultFactory(result_type__name=ResultType.OUTPUT)
+        cp_output_2 = ResultFactory(result_type__name=ResultType.OUTPUT)
+        activity_match = ResultFactory(result_type__name=ResultType.ACTIVITY, parent=cp_output_1, wbs='A-WBS-MATCH')
+        ResultFactory(result_type__name=ResultType.ACTIVITY, parent=cp_output_2, wbs='A-WBS-OTHER')
+
+        self._test_list(
+            self.unicef_user,
+            [activity_match],
+            data={'cp_output__in': str(cp_output_1.id)},
+        )
+
 class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:interventions'
 

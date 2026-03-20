@@ -12,6 +12,7 @@ root_api.register(r'questions/templates/(?P<level>\w+)(?:/target/(?P<target_id>\
 root_api.register(r'activities', views.MonitoringActivitiesViewSet, basename='activities')
 root_api.register(r'users', views.FMUsersViewSet, basename='users')
 root_api.register(r'cp-outputs', views.CPOutputsViewSet, basename='cp_outputs')
+root_api.register(r'activity-options', views.FMActivitiesOptionsViewSet, basename='activity_options')
 root_api.register(r'interventions', views.InterventionsViewSet, basename='interventions')
 root_api.register(r'partners', views.PartnersViewSet, basename='partners')
 root_api.register(r'visit-goals', views.VisitGoalsViewSet, basename='visit-goals')

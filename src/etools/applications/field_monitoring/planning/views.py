@@ -63,6 +63,7 @@ from etools.applications.field_monitoring.planning.models import (
     YearPlan,
 )
 from etools.applications.field_monitoring.planning.serializers import (
+    FMActivityOptionSerializer,
     CPOutputListSerializer,
     DuplicateMonitoringActivitySerializer,
     FacilityTypeSerializer,
@@ -419,6 +420,48 @@ class CPOutputsViewSet(
     filterset_class = CPOutputsFilterSet
     queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).select_related('result_type').order_by('name')
     serializer_class = CPOutputListSerializer
+
+
+class FMActivitiesOptionsViewSet(
+    FMBaseViewSet,
+    EmptyQuerysetForExternal,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    Read-only endpoint used by FE to populate WBS Activity Lv4 dropdowns.
+    """
+    filter_backends = (SearchFilter,)
+    search_fields = ('wbs', 'name')
+    queryset = Result.objects.filter(result_type__name=ResultType.ACTIVITY).select_related('parent').order_by('name')
+    serializer_class = FMActivityOptionSerializer
+
+    @staticmethod
+    def _parse_int_list(csv_or_single):
+        if not csv_or_single:
+            return []
+        values = []
+        for raw in str(csv_or_single).split(','):
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                values.append(int(raw))
+            except (TypeError, ValueError):
+                continue
+        return values
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        cp_outputs = (
+            self.request.query_params.get('cp_outputs__in')
+            or self.request.query_params.get('cp_output__in')
+            or self.request.query_params.get('cp_output')
+        )
+        cp_output_ids = self._parse_int_list(cp_outputs)
+        if cp_output_ids:
+            queryset = queryset.filter(parent_id__in=cp_output_ids)
+        return queryset
 
 
 class InterventionsViewSet(
