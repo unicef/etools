@@ -16,6 +16,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategorySerializer
 from etools.applications.action_points.models import ActionPoint, ActionPointComment
+from etools.applications.field_monitoring.planning.mixins import EWPActivity
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
@@ -23,6 +24,12 @@ from etools.applications.reports.serializers.v1 import ResultSerializer, Section
 from etools.applications.reports.serializers.v2 import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 from etools.libraries.djangolib.utils import get_current_site
+
+
+class MinimalEWPActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EWPActivity
+        fields = ('id', 'wbs')
 
 
 class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):
@@ -86,6 +93,13 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
         required=False,
     )
 
+    ewp_activity = SeparatedReadWriteField(
+        read_field=MinimalEWPActivitySerializer(read_only=True, label=_('Key Intervention')),
+        write_field=serializers.SlugRelatedField(
+            slug_field='wbs', queryset=EWPActivity.objects.all(), required=False, allow_null=True,
+        ),
+    )
+
     location = SeparatedReadWriteField(
         read_field=LocationLightSerializer(read_only=True, label=_('Location')),
     )
@@ -101,7 +115,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
 
     class Meta(ActionPointBaseSerializer.Meta):
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'related_module', 'cp_output', 'partner', 'intervention', 'location',
+            'related_module', 'cp_output', 'ewp_activity', 'partner', 'intervention', 'location',
             'engagement', 'psea_assessment', 'tpm_activity', 'travel_activity',
             'date_of_verification',
         ]

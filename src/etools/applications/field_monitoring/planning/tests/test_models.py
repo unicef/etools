@@ -26,7 +26,7 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory, QuestionFactory
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
-from etools.applications.field_monitoring.planning.models import EWPActivity, GPD, MonitoringActivity
+from etools.applications.field_monitoring.planning.models import EWPActivity, MonitoringActivity
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
@@ -80,7 +80,7 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
     def test_checklist_requires_at_least_one_entity(self):
         """
         Checklist transition requires at least one of:
-        partners, cp_outputs, interventions, ewp_activities, or gpds.
+        partners, cp_outputs, interventions, or ewp_activities.
         """
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.checklist)
         self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
@@ -89,12 +89,6 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.checklist)
         ewp = EWPActivity.objects.create(wbs='ACT-VALID-001')
         activity.ewp_activities.add(ewp)
-        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
-
-    def test_checklist_accepts_gpds_instead_of_interventions(self):
-        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.checklist)
-        gpd = GPD.objects.create(gpd_ref='GPD-VALID-001')
-        activity.gpds.add(gpd)
         self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
     def test_staff_member_from_assigned_partner(self):
@@ -150,7 +144,7 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='')
         self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
 
-        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding_raw='test')
         self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
     def test_activity_overall_findings_required_question_finding(self):
@@ -230,13 +224,13 @@ class TestMonitoringActivityPortFindingsToSummary(BaseTenantTestCase):
         aof = ActivityOverallFinding.objects.create(
             monitoring_activity=activity,
             partner=partner,
-            narrative_finding='User narrative',
+            narrative_finding_raw='User narrative',
             on_track=True,
         )
         ChecklistOverallFindingFactory(
             started_checklist=checklist,
             partner=partner,
-            narrative_finding='Checklist narrative',
+            narrative_finding_raw='Checklist narrative',
         )
 
         # Run the prefill logic.
@@ -275,7 +269,7 @@ class TestMonitoringActivityPortFindingsToSummary(BaseTenantTestCase):
         ChecklistOverallFindingFactory(
             started_checklist=checklist,
             partner=partner,
-            narrative_finding='Checklist narrative',
+            narrative_finding_raw='Checklist narrative',
         )
 
         old_instance = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.data_collection)
@@ -370,7 +364,7 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
 
 
 class TestNewEntityTypes(BaseTenantTestCase):
-    """Test ewp_activities and gpds functionality."""
+    """Test ewp_activities functionality."""
 
     def setUp(self):
         super().setUp()
@@ -388,8 +382,6 @@ class TestNewEntityTypes(BaseTenantTestCase):
 
     def test_ewp_activity_questions_generated(self):
         """Test that questions are generated for ewp_activities."""
-        from etools.applications.field_monitoring.planning.models import EWPActivity
-
         ewp_activity = EWPActivity.objects.create(wbs='ACT-001-2024')
 
         activity = MonitoringActivityFactory(
@@ -419,7 +411,7 @@ class TestNewEntityTypes(BaseTenantTestCase):
         # Ensure generated ActivityQuestion is enabled (uses base template).
         QuestionTemplateFactory(question=self.ewp_question)
 
-        ewp_activity = EWPActivity.objects.create(wbs='ACT-CHK-001-2024')
+        ewp_activity = EWPActivity.objects.create(wbs='ACT-CHK-001-2024', cp_output=None)
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
         activity.sections.set([self.section])
         activity.ewp_activities.set([ewp_activity])
@@ -449,205 +441,241 @@ class TestNewEntityTypes(BaseTenantTestCase):
         self.assertEqual(finding.activity_question.question, self.ewp_question)
         self.assertEqual(finding.activity_question.ewp_activity, ewp_activity)
 
-    def test_checklist_finds_gpd_questions_from_intervention_level(self):
-        """
-        When an activity has gPDs, the generated ActivityQuestions (intervention-level question pool)
-        should be used to populate checklist findings for the gPD.
-
-        Note: we create StartedChecklist via bulk_create to avoid calling its overridden save(),
-        so we can exercise prepare_findings() without creating overall findings.
-        """
-        from etools.applications.field_monitoring.data_collection.models import Finding, StartedChecklist
-        from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory
-        from etools.applications.field_monitoring.planning.models import GPD
-        from etools.applications.field_monitoring.tests.factories import UserFactory
-
-        method = MethodFactory()
-        self.intervention_question.methods.add(method)
-        # Ensure generated ActivityQuestion is enabled (uses base template).
-        QuestionTemplateFactory(question=self.intervention_question)
-
-        gpd = GPD.objects.create(gpd_ref='GPD-CHK-001')
-        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
-        activity.sections.set([self.section])
-        activity.gpds.set([gpd])
-        activity.prepare_questions_structure()
-
-        aq_qs = activity.questions.filter(gpd=gpd, question=self.intervention_question, is_enabled=True)
-        self.assertEqual(aq_qs.count(), 1)
-
-        author = UserFactory()
-        checklist = StartedChecklist(
-            monitoring_activity=activity,
-            method=method,
-            information_source='test',
-            author=author,
-        )
-        StartedChecklist.objects.bulk_create([checklist])
-        checklist = StartedChecklist.objects.get(
-            monitoring_activity=activity,
-            method=method,
-            author=author,
-        )
-
-        checklist.prepare_findings()
-
-        self.assertEqual(Finding.objects.filter(started_checklist=checklist).count(), 1)
-        finding = Finding.objects.get(started_checklist=checklist)
-        self.assertEqual(finding.activity_question.question, self.intervention_question)
-        self.assertEqual(finding.activity_question.gpd, gpd)
-
-    def test_gpd_questions_use_intervention_level(self):
-        """Test that gPDs use intervention-level questions."""
-        from etools.applications.field_monitoring.planning.models import GPD
-
-        gpd = GPD.objects.create(gpd_ref='GPD-2024-001')
-
-        activity = MonitoringActivityFactory(
-            status=MonitoringActivity.STATUSES.draft
-        )
-        activity.sections.set([self.section])
-        activity.gpds.set([gpd])
-
-        activity.prepare_questions_structure()
-
-        # Should create activity questions using intervention level
-        gpd_questions = activity.questions.filter(gpd=gpd)
-        self.assertEqual(gpd_questions.count(), 1)
-        self.assertEqual(gpd_questions.first().question, self.intervention_question)
-
-    def test_gpds_and_interventions_share_question_level(self):
-        """Test that both interventions and gPDs use the same question pool."""
-        from etools.applications.field_monitoring.planning.models import GPD
-
-        intervention = InterventionFactory()
-        gpd = GPD.objects.create(gpd_ref='GPD-2024-002')
-
-        activity = MonitoringActivityFactory(
-            status=MonitoringActivity.STATUSES.draft
-        )
-        activity.sections.set([self.section])
-        activity.interventions.set([intervention])
-        activity.gpds.set([gpd])
-        activity.partners.set([intervention.agreement.partner])
-
-        activity.prepare_questions_structure()
-
-        # Both should get questions from intervention level
-        intervention_q = activity.questions.filter(intervention=intervention)
-        gpd_q = activity.questions.filter(gpd=gpd)
-
-        self.assertEqual(intervention_q.count(), 1)
-        self.assertEqual(gpd_q.count(), 1)
-        self.assertEqual(
-            intervention_q.first().question,
-            gpd_q.first().question
-        )
-
-    def test_overall_findings_created_for_new_entities(self):
-        """Test that overall findings are created for ewp_activities and gpds."""
-        from etools.applications.field_monitoring.planning.models import EWPActivity, GPD
-
+    def test_overall_findings_created_for_ewp_activities(self):
+        """Test that overall findings are created for ewp_activities."""
         ewp_activity = EWPActivity.objects.create(wbs='ACT-002-2024')
-        gpd = GPD.objects.create(gpd_ref='GPD-2024-003')
 
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
         )
         activity.sections.set([self.section])
         activity.ewp_activities.set([ewp_activity])
-        activity.gpds.set([gpd])
 
         activity.prepare_questions_structure()
         activity.prepare_activity_overall_findings()
 
-        # Check overall findings were created
         ewp_finding = activity.overall_findings.filter(ewp_activity=ewp_activity)
-        gpd_finding = activity.overall_findings.filter(gpd=gpd)
-
         self.assertEqual(ewp_finding.count(), 1)
-        self.assertEqual(gpd_finding.count(), 1)
+
+    def test_get_effective_cp_outputs_deduplication(self):
+        """
+        _get_effective_cp_outputs must return each cp_output exactly once even when
+        it appears in both the direct cp_outputs M2M and via an ewp_activity.
+        """
+        cp1 = ResultFactory(result_type__name=ResultType.OUTPUT)
+        cp2 = ResultFactory(result_type__name=ResultType.OUTPUT)
+
+        ewp1 = EWPActivity.objects.create(wbs='EFF-DEDUP-001', cp_output=cp1)
+        ewp2 = EWPActivity.objects.create(wbs='EFF-DEDUP-002', cp_output=cp2)
+
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
+        # cp1 appears both in cp_outputs M2M AND via ewp1 — must be deduplicated
+        activity.cp_outputs.set([cp1])
+        activity.ewp_activities.set([ewp1, ewp2])
+
+        effective = activity._get_effective_cp_outputs()
+        effective_ids = [cp.pk for cp in effective]
+
+        self.assertEqual(len(effective_ids), 2)
+        self.assertIn(cp1.pk, effective_ids)
+        self.assertIn(cp2.pk, effective_ids)
+
+    def test_cp_output_questions_not_duplicated_when_shared_with_ewp(self):
+        """
+        When a cp_output is linked both directly (cp_outputs M2M) and indirectly
+        via an ewp_activity, output-level questions must be generated exactly once —
+        not once per link.
+        """
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+        output_question = QuestionFactory(
+            level=Question.LEVELS.output,
+            sections=[self.section],
+        )
+
+        ewp_activity = EWPActivity.objects.create(wbs='NO-DUP-001', cp_output=cp_output)
+
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
+        activity.sections.set([self.section])
+        activity.cp_outputs.set([cp_output])       # direct
+        activity.ewp_activities.set([ewp_activity])  # indirect, same cp_output
+
+        activity.prepare_questions_structure()
+
+        output_qs = activity.questions.filter(question=output_question, cp_output=cp_output)
+        self.assertEqual(
+            output_qs.count(), 1,
+            "Output-level question must appear exactly once even when cp_output is "
+            "shared between direct M2M and an ewp_activity.",
+        )
+
+    def test_ewp_activity_with_cp_output_generates_both_question_levels(self):
+        """
+        An ewp_activity linked to a cp_output must produce:
+        - one output-level question tagged to cp_output
+        - one ewp_activity-level question tagged to cp_output only (no ewp_activity FK)
+        Multiple KIs sharing the same cp_output must not duplicate the ewp questions.
+        """
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+        output_question = QuestionFactory(level=Question.LEVELS.output, sections=[self.section])
+
+        ewp1 = EWPActivity.objects.create(wbs='BOTH-LEVELS-001', cp_output=cp_output)
+        ewp2 = EWPActivity.objects.create(wbs='BOTH-LEVELS-002', cp_output=cp_output)
+
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
+        activity.sections.set([self.section])
+        activity.ewp_activities.set([ewp1, ewp2])
+
+        activity.prepare_questions_structure()
+
+        self.assertEqual(activity.questions.filter(cp_output=cp_output, question=output_question).count(), 1)
+        # ewp questions deduplicated: one per (cp_output, question_template), tagged to cp_output
+        self.assertEqual(
+            activity.questions.filter(cp_output=cp_output, ewp_activity__isnull=True, question=self.ewp_question).count(), 1
+        )
+
+    def test_ewp_activity_with_cp_output_uses_cp_output_overall_finding(self):
+        """An ewp_activity with a cp_output must not get a standalone overall finding."""
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+        ewp_activity = EWPActivity.objects.create(wbs='OF-WITH-CP-001', cp_output=cp_output)
+
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
+        activity.sections.set([self.section])
+        activity.ewp_activities.set([ewp_activity])
+
+        activity.prepare_questions_structure()
+        activity.prepare_activity_overall_findings()
+
+        self.assertFalse(activity.overall_findings.filter(ewp_activity=ewp_activity).exists())
+        self.assertTrue(activity.overall_findings.filter(cp_output=cp_output).exists())
+
+    def test_ewp_activity_without_cp_output_gets_standalone_overall_finding(self):
+        """An ewp_activity without a cp_output must still get its own standalone overall finding."""
+        ewp_activity = EWPActivity.objects.create(wbs='OF-NO-CP-001', cp_output=None)
+
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
+        activity.sections.set([self.section])
+        activity.ewp_activities.set([ewp_activity])
+
+        activity.prepare_questions_structure()
+        activity.prepare_activity_overall_findings()
+
+        self.assertTrue(activity.overall_findings.filter(ewp_activity=ewp_activity).exists())
+
+    def test_ewp_activity_unique_wbs_null_cp_output(self):
+        """
+        Two EWPActivity rows with the same wbs and cp_output=NULL must be rejected.
+        The partial UniqueConstraint on (wbs) WHERE cp_output IS NULL enforces this,
+        which a plain unique_together would silently miss in PostgreSQL.
+        """
+        from django.db import IntegrityError, transaction
+
+        EWPActivity.objects.create(wbs='UNIQUE-NULL-WBS', cp_output=None)
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                EWPActivity.objects.create(wbs='UNIQUE-NULL-WBS', cp_output=None)
+
+    def test_ewp_activity_unique_wbs_same_cp_output(self):
+        """Two EWPActivity rows with the same wbs and the same non-null cp_output must be rejected."""
+        from django.db import IntegrityError, transaction
+
+        cp = ResultFactory(result_type__name=ResultType.OUTPUT)
+        EWPActivity.objects.create(wbs='UNIQUE-CP-WBS', cp_output=cp)
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                EWPActivity.objects.create(wbs='UNIQUE-CP-WBS', cp_output=cp)
+
+    def test_ewp_activity_same_wbs_different_cp_output_allowed(self):
+        """Same wbs with different (non-null) cp_outputs must be allowed."""
+        cp1 = ResultFactory(result_type__name=ResultType.OUTPUT)
+        cp2 = ResultFactory(result_type__name=ResultType.OUTPUT)
+        EWPActivity.objects.create(wbs='SHARED-WBS', cp_output=cp1)
+        ewp2 = EWPActivity.objects.create(wbs='SHARED-WBS', cp_output=cp2)
+        self.assertIsNotNone(ewp2.pk)
 
 
 class TestEntityValidation(BaseTenantTestCase):
-    """Test validation for ewp_activities and gpds."""
+    """Test validation for ewp_activities."""
 
-    def test_wbs_length_validation(self):
-        """Test that WBS numbers exceeding 255 characters are rejected."""
+    def test_ewp_activity_input_validation(self):
+        """Test that ewp_activities input must be a list of objects."""
         serializer = MonitoringActivitySerializer()
+        with self.assertRaises(Exception):
+            serializer._validate_ewp_activities('not-a-list')
 
-        # Test too long WBS
-        long_wbs = 'A' * 256
-        with self.assertRaises(Exception) as context:
-            serializer._validate_string_list([long_wbs], 'ewp_activities', max_length=255)
-        self.assertIn('exceeds maximum length', str(context.exception))
-
-    def test_gpd_length_validation(self):
-        """Test that GPD references exceeding 25 characters are rejected."""
-        serializer = MonitoringActivitySerializer()
-
-        # Test too long GPD ref
-        long_gpd = 'G' * 26
-        with self.assertRaises(Exception) as context:
-            serializer._validate_string_list([long_gpd], 'gpds', max_length=25)
-        self.assertIn('exceeds maximum length', str(context.exception))
-
-    def test_empty_strings_filtered_out(self):
-        """Test that empty/whitespace strings are filtered out."""
-        serializer = MonitoringActivitySerializer()
-
-        result = serializer._validate_string_list(
-            ['  ', 'ACT-001', '', '  \n  ', 'ACT-002'],
-            'ewp_activities',
-            max_length=255
-        )
-
-        # Only non-empty items should remain
-        self.assertEqual(result, ['ACT-001', 'ACT-002'])
-
-    def test_whitespace_stripped(self):
-        """Test that leading/trailing whitespace is stripped."""
-        serializer = MonitoringActivitySerializer()
-
-        result = serializer._validate_string_list(
-            ['  ACT-001  ', '\nGPD-123\t'],
-            'ewp_activities',
-            max_length=255
-        )
-
-        self.assertEqual(result, ['ACT-001', 'GPD-123'])
-
-    def test_wbs_uniqueness(self):
-        """Test that duplicate WBS numbers cannot be created."""
-        EWPActivity.objects.create(wbs='ACT-001')
-
-        # Should reuse existing instead of creating duplicate
-        obj1, created1 = EWPActivity.objects.get_or_create(wbs='ACT-001')
-        self.assertFalse(created1)
-
-        # Total count should be 1
-        self.assertEqual(EWPActivity.objects.filter(wbs='ACT-001').count(), 1)
-
-    def test_gpd_uniqueness(self):
-        """Test that duplicate GPD refs cannot be created."""
-        GPD.objects.create(gpd_ref='GPD-001')
-
-        # Should reuse existing instead of creating duplicate
-        obj1, created1 = GPD.objects.get_or_create(gpd_ref='GPD-001')
-        self.assertFalse(created1)
-
-        # Total count should be 1
-        self.assertEqual(GPD.objects.filter(gpd_ref='GPD-001').count(), 1)
+    def test_ewp_activity_uniqueness(self):
+        """Test that (wbs, cp_output) pairs are unique for EWPActivity."""
+        EWPActivity.objects.create(wbs='ACT-001', cp_output=None)
+        obj, created = EWPActivity.objects.get_or_create(wbs='ACT-001', cp_output=None)
+        self.assertFalse(created)
+        self.assertEqual(EWPActivity.objects.filter(wbs='ACT-001', cp_output=None).count(), 1)
 
     def test_ewp_activity_str(self):
-        """EWPActivity.__str__ should return the wbs value (used as blueprint title)."""
+        """EWPActivity.__str__ should return the wbs value."""
         ewp = EWPActivity.objects.create(wbs='WBS-STR-001')
         self.assertEqual(str(ewp), 'WBS-STR-001')
 
-    def test_gpd_str(self):
-        """GPD.__str__ should return the gpd_ref value (used as blueprint title)."""
-        gpd = GPD.objects.create(gpd_ref='GPD-STR-001')
-        self.assertEqual(str(gpd), 'GPD-STR-001')
+    def test_ewp_activity_cp_output_fk(self):
+        """EWPActivity must accept a cp_output FK and expose it correctly."""
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+        ewp = EWPActivity.objects.create(wbs='WBS-CP-FK-001', cp_output=cp_output)
+        ewp.refresh_from_db()
+        self.assertEqual(ewp.cp_output_id, cp_output.pk)
+
+    def test_same_wbs_allowed_for_different_cp_outputs(self):
+        """
+        unique_together is (wbs, cp_output), so the same WBS string is valid
+        under two different cp_outputs — which mirrors how real eWP data can look.
+        """
+        cp1 = ResultFactory(result_type__name=ResultType.OUTPUT)
+        cp2 = ResultFactory(result_type__name=ResultType.OUTPUT)
+        EWPActivity.objects.create(wbs='SHARED-WBS', cp_output=cp1)
+        # Must not raise
+        ewp2 = EWPActivity.objects.create(wbs='SHARED-WBS', cp_output=cp2)
+        self.assertIsNotNone(ewp2.pk)
+
+    def test_ewp_activity_validate_activities_must_be_list(self):
+        """activities inside each group must be a list, not a scalar."""
+        serializer = MonitoringActivitySerializer()
+        with self.assertRaises(Exception):
+            serializer._validate_ewp_activities([{'cp_output': None, 'activities': 'not-a-list'}])
+
+    def test_ewp_activity_rejects_unknown_wbs(self):
+        """
+        _validate_ewp_activities must reject WBS codes that are not backed
+        by a synced Activity-type Result (Vision/Insight Activity).
+        """
+        serializer = MonitoringActivitySerializer()
+        with self.assertRaises(Exception):
+            serializer._validate_ewp_activities(
+                [{'cp_output': None, 'activities': ['NON-EXISTENT-WBS-001']}]
+            )
+
+    def test_ewp_activity_accepts_known_activity_wbs_and_links_fk(self):
+        """
+        When a valid Activity-type Result exists for the given WBS, resolving
+        ewp_activities should create/link an EWPActivity with its activity FK set.
+        """
+        # Create an Activity-type Result that mimics a WBS Activity Lv4 from Vision/Insight.
+        activity_result = ResultFactory(result_type__name=ResultType.ACTIVITY, wbs='VALID-WBS-001')
+        serializer = MonitoringActivitySerializer()
+
+        validated = serializer._validate_ewp_activities(
+            [{'cp_output': None, 'activities': ['VALID-WBS-001']}]
+        )
+        # Sanity: validation should pass and preserve structure.
+        self.assertEqual(
+            validated,
+            [{'cp_output': None, 'activities': ['VALID-WBS-001']}],
+        )
+
+        # Resolution must create or reuse an EWPActivity and link its activity FK.
+        instances = serializer._resolve_ewp_activities(validated)
+        self.assertEqual(len(instances), 1)
+        ewp = instances[0]
+        ewp.refresh_from_db()
+        self.assertEqual(ewp.wbs, 'VALID-WBS-001')
+        self.assertIsNone(ewp.cp_output_id)
+        self.assertEqual(ewp.activity_id, activity_result.id)
 
 
 class TestMonitoringActivityGroups(BaseTenantTestCase):
