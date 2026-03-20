@@ -27,7 +27,7 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
     ActivityQuestionFactory,
     StartedChecklistFactory,
 )
-from etools.applications.field_monitoring.fm_settings.models import Question
+from etools.applications.field_monitoring.fm_settings.models import FMDocumentTypeDescription, Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import (
     DuplicateMonitoringActivity,
@@ -1181,6 +1181,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
     def test_file_types(self):
         wrong_file_type = AttachmentFileTypeFactory()
         file_type = AttachmentFileTypeFactory(code='fm_common')
+        FMDocumentTypeDescription.objects.create(name=file_type.name, description='test description')
 
         response = self.forced_auth_req(
             'get',

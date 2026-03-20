@@ -298,3 +298,16 @@ class LogIssue(TimeStampedModel):
             return self.RELATED_TO_TYPE_CHOICES.partner
         elif self.location:
             return self.RELATED_TO_TYPE_CHOICES.location
+
+
+class FMDocumentTypeDescription(models.Model):
+    """Tooltip descriptions for fm_common FileType entries, keyed by FileType.name.
+    Stored here because FileType (external package) has no description field."""
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+
+    class Meta:
+        verbose_name = "FM Document Type Description"
+
+    def __str__(self):
+        return self.name
