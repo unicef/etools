@@ -75,12 +75,15 @@ stages:
 - stage: Test
   displayName: Run tests
   dependsOn: BaseImage
-  # Tests only on PR to Develop. Staging and Master assume tested code
+  # Tests only on PR to Develop and Staging. Master assume tested code
   condition: |
     and(
       succeeded(),
       eq(variables['Build.Reason'], 'PullRequest'),
-      eq(variables['System.PullRequest.TargetBranch'], 'develop')
+      or(
+        eq(variables['System.PullRequest.TargetBranch'], 'develop'),
+        eq(variables['System.PullRequest.TargetBranch'], 'staging')
+      )
     )
   variables:
     BASE_TAG: $[ stageDependencies.BaseImage.Base.outputs['vars.BASE_TAG'] ]
@@ -134,7 +137,7 @@ stages:
               tox -e d42
             "
         displayName: Run tox tests
-        timeoutInMinutes: 60
+        timeoutInMinutes: 240
 
       - script: |
           docker rm -f pg redis

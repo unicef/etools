@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-12 13:51+0000\n"
+"POT-Creation-Date: 2026-03-09 21:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -121,6 +121,24 @@ msgstr "PD/SPD"
 
 msgid "Outputs"
 msgstr "Productos"
+
+msgid "Monitored Partner"
+msgstr ""
+
+msgid "Involves Remote Monitoring"
+msgstr ""
+
+msgid "Data Collection methods applied "
+msgstr ""
+
+msgid "Attachments uploaded"
+msgstr ""
+
+msgid "Action Points opened"
+msgstr "Categoría de Punto de Acción"
+
+msgid "Overall finding ratings"
+msgstr ""
 
 msgid "Prioritization Criteria"
 msgstr "Criterios de Priorización"
@@ -242,9 +260,6 @@ msgstr "Cancelado"
 msgid "Reference Number"
 msgstr "N.° de referencia"
 
-msgid "Involves Remote Monitoring"
-msgstr ""
-
 msgid "Report Reviewers"
 msgstr ""
 
@@ -253,6 +268,12 @@ msgstr ""
 
 msgid "Field Office"
 msgstr "Oficina de Terreno"
+
+msgid "Programmatic Visit"
+msgstr "Visita programática"
+
+msgid "True when status is completed, start/end date are in the same year, HACT question is answered, and summary on-track is answered."
+msgstr "Verdadero cuando el estado es completado, la fecha de inicio y fin están en el mismo año, se ha respondido la pregunta HACT y se ha respondido el resumen (en camino)."
 
 msgid "Activity Attachments"
 msgstr "Anexos de actividad"

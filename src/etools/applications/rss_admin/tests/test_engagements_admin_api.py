@@ -13,6 +13,8 @@ from etools.applications.audit.models import Engagement, Finding
 from etools.applications.audit.tests.factories import (
     AuditFactory,
     FindingFactory,
+    SpecialAuditFactory,
+    SpecificProcedureFactory,
     SpotCheckFactory,
     StaffSpotCheckFactory,
 )
@@ -581,27 +583,22 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertTrue(len(resp.data['cancel_comment']) > 0)
         self.assertIn('required', resp.data['cancel_comment'][0])
 
-        # Test 4: Transition checks should return a clean, user-friendly message
+        # Test 4: FSM condition errors (field-keyed dict) are surfaced as field-level errors, not wrapped under 'status'
         sc = SpotCheckFactory(status=Engagement.STATUSES.report_submitted)
         FindingFactory(spot_check=sc, priority=Finding.PRIORITIES.high)
         sc_url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': sc.pk})
         payload = {'status': Engagement.STATUSES.final}
         resp = self.forced_auth_req('patch', sc_url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
-        self.assertIn('status', resp.data)
-        self.assertIsInstance(resp.data['status'], list, "Error should be a list")
-        self.assertTrue(len(resp.data['status']) > 0)
-        self.assertIn('Unable to change status', resp.data['status'][0])
-        self.assertIn('High-priority findings require at least one open high-priority Action Point', resp.data['status'][0])
-        # Ensure raw DRF internals are not leaked in the message
-        self.assertNotIn('ErrorDetail', resp.data['status'][0])
+        self.assertIn('action_points', resp.data)
+        self.assertNotIn('status', resp.data)
 
     def test_engagement_patch_status_transition_error_messages_are_user_friendly(self):
         """Transition failures should not leak DRF ErrorDetail(...) internals and should be concise."""
         sc = SpotCheckFactory(status=Engagement.STATUSES.report_submitted)
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': sc.pk})
 
-        # Case 1: ValidationError with dict + action_points key
+        # Case 1: ValidationError with a field-keyed dict is re-raised as-is (field-level, not wrapped under 'status')
         with mock.patch.object(
             sc.__class__,
             'finalize',
@@ -610,12 +607,10 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         ):
             resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.STATUSES.final})
             self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
-            self.assertIn('status', resp.data)
-            self.assertIn('Unable to change status', resp.data['status'][0])
-            self.assertIn('Must create a high priority action point', resp.data['status'][0])
-            self.assertNotIn('ErrorDetail', resp.data['status'][0])
+            self.assertIn('action_points', resp.data)
+            self.assertNotIn('status', resp.data)
 
-        # Case 2: ValidationError with dict (other keys) should be flattened
+        # Case 2: Any ValidationError with a dict is re-raised as field-level errors
         with mock.patch.object(
             sc.__class__,
             'finalize',
@@ -624,11 +619,9 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         ):
             resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.STATUSES.final})
             self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
-            msg = resp.data['status'][0]
-            self.assertIn('Unable to change status', msg)
-            self.assertIn('some field: Some failure', msg)
-            self.assertIn('other field: Other failure', msg)
-            self.assertNotIn('ErrorDetail', msg)
+            self.assertIn('some_field', resp.data)
+            self.assertIn('other_field', resp.data)
+            self.assertNotIn('status', resp.data)
 
         # Case 3: ValidationError with list should use first message
         with mock.patch.object(
@@ -1082,3 +1075,96 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         # Verify the user is in results
         user_emails = [log['user']['email'] if log.get('user') else None for log in results]
         self.assertIn(self.user.email, user_emails)
+
+
+@override_settings(RESTRICTED_ADMIN=False)
+class TestRssAdminEngagementSubmitValidation(BaseTenantTestCase):
+    """When PATCHing status to report_submitted, validation failures must return
+    field-keyed errors (e.g. {'date_of_field_visit': [...]}) rather than the
+    generic {'status': ['Unable to change status...']} fallback.
+    """
+
+    BASE_DATES = {
+        'date_of_field_visit': date(2024, 1, 15),
+        'date_of_draft_report_to_ip': date(2024, 1, 20),
+        'date_of_comments_by_ip': date(2024, 1, 25),
+        'date_of_draft_report_to_unicef': date(2024, 1, 30),
+        'date_of_comments_by_unicef': date(2024, 2, 5),
+    }
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.user = UserFactory(is_staff=True)
+        cls.report_file_type = AttachmentFileTypeFactory(name='report', code='audit_report')
+
+    def _add_report_attachment(self, engagement):
+        engagement.report_attachments.add(
+            AttachmentFactory(code='audit_report', file='report.pdf', file_type=self.report_file_type)
+        )
+
+    def _patch_submit(self, engagement):
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': engagement.pk})
+        return self.forced_auth_req(
+            'patch', url, user=self.user,
+            data={'status': Engagement.STATUSES.report_submitted},
+        )
+
+    def test_submit_missing_required_fields_returns_field_level_errors(self):
+        """Errors must be keyed by field name, not buried under 'status'."""
+        audit = AuditFactory(
+            status=Engagement.STATUSES.partner_contacted,
+            audit_opinion='',
+            currency_of_report='USD',
+            date_of_field_visit=None,
+        )
+        self._add_report_attachment(audit)
+
+        resp = self._patch_submit(audit)
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('date_of_field_visit', resp.data)
+        self.assertIn('audit_opinion', resp.data)
+        self.assertNotIn('status', resp.data)
+
+    def test_submit_missing_report_attachment_returns_field_level_error(self):
+        """Missing report attachment must also surface as a field-level error."""
+        audit = AuditFactory(
+            status=Engagement.STATUSES.partner_contacted,
+            audit_opinion='qualified',
+            currency_of_report='USD',
+            **self.BASE_DATES,
+        )
+        # No report attachment
+
+        resp = self._patch_submit(audit)
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('report_attachments', resp.data)
+        self.assertNotIn('status', resp.data)
+
+    def test_submit_spot_check_missing_internal_controls_returns_field_error(self):
+        sc = SpotCheckFactory(
+            status=Engagement.STATUSES.partner_contacted,
+            internal_controls='',
+            currency_of_report='USD',
+            **self.BASE_DATES,
+        )
+        self._add_report_attachment(sc)
+
+        resp = self._patch_submit(sc)
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('internal_controls', resp.data)
+        self.assertNotIn('status', resp.data)
+
+    def test_submit_special_audit_missing_procedure_findings_returns_field_error(self):
+        sa = SpecialAuditFactory(status=Engagement.STATUSES.partner_contacted, **self.BASE_DATES)
+        SpecificProcedureFactory(audit=sa, finding='')
+        self._add_report_attachment(sa)
+
+        resp = self._patch_submit(sa)
+
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('specific_procedures', resp.data)
+        self.assertNotIn('status', resp.data)

@@ -5,6 +5,7 @@ from django.utils.translation import gettext as _
 
 from unicef_attachments.models import FileType
 
+from etools.applications.field_monitoring.data_collection.dynamic_options import get_dynamic_options_pairs
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
 from etools.applications.offline.blueprint import Blueprint
 from etools.applications.offline.fields import (
@@ -86,7 +87,13 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
             questions_block = Group('questions', styling=['abstract'], required=False)
             target_block.add(questions_block)
             for question in target_questions.select_related('question__category').distinct():
-                if question.question.answer_type in [
+                other = question.question.other or {}
+                dynamic_options_type = other.get('dynamic_options_type')
+                if dynamic_options_type:
+                    options_key = 'dynamic_{}_{}'.format(dynamic_options_type, target.id)
+                    options_pairs = get_dynamic_options_pairs(dynamic_options_type, level, target)
+                    blueprint.metadata.options[options_key] = LocalPairsOptions(options_pairs)
+                elif question.question.answer_type in [
                     Question.ANSWER_TYPES.bool,
                     Question.ANSWER_TYPES.likert_scale,
                     Question.ANSWER_TYPES.multiple_choice
@@ -104,6 +111,7 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
                         label=question.question.text,
                         options_key=options_key,
                         help_text=question.specific_details,
+                        tooltip=getattr(question.question, 'tooltip', ''),
                         required=False,
                         # For HACT questions, a warning that is mandatory to fill in is needed in the frontend
                         styling=['mandatory_warning']

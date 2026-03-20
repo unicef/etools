@@ -2,6 +2,7 @@ from functools import cached_property
 
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
+from django.contrib.postgres.fields import ArrayField
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.db import connection, models
@@ -128,6 +129,41 @@ class PointOfInterestTypeMapping(TimeStampedModel, models.Model):
         return cls.objects.filter(
             primary_type_id=primary_type_id
         ).values_list('secondary_type_id', flat=True)
+
+
+class DispensingPointType(TimeStampedModel, models.Model):
+    name = models.CharField(
+        verbose_name=_("Dispensing Point Type Name"),
+        max_length=64,
+        unique=True,
+        help_text=_("Machine identifier sent to/from FE, e.g. 'PHARMACY'")
+    )
+    label = models.CharField(
+        verbose_name=_("Translation Key"),
+        max_length=64,
+        help_text=_("SimpleLocalize translation key, e.g. 'pharmacy'")
+    )
+    applicability = ArrayField(
+        models.IntegerField(),
+        verbose_name=_("Applicability"),
+        default=list,
+        help_text=_("1 = batched items, 2 = non-batched. E.g. [1,2] means both.")
+    )
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text=_("Display order. Lower numbers appear first.")
+    )
+
+    objects = BaseExportQuerySet.as_manager()
+
+    class Meta:
+        ordering = ['order', 'name']
+        verbose_name = _('Dispensing Point Type')
+        verbose_name_plural = _('Dispensing Point Types')
+
+    def __str__(self):
+        return self.name.replace('_', ' ').title()
 
 
 class PointOfInterestQuerySet(models.QuerySet):
@@ -366,6 +402,7 @@ class TransferQuerySet(models.QuerySet):
             checked_in_by_first_name=models.F('checked_in_by__first_name'),
             origin_name=models.F('origin_point__name'),
             destination_name=models.F('destination_point__name'),
+            dispense_type_name=models.F('dispense_type__name'),
         ).values()
 
 
@@ -398,12 +435,6 @@ class Transfer(TimeStampedModel, models.Model):
     SHORT = 'SHORT'
     SURPLUS = 'SURPLUS'
 
-    PHARMACY = 'PHARMACY'
-    MOBILE_OTP = 'MOBILE_OTP'
-    DISPENSING_UNIT = 'DISPENSING_UNIT'
-    HOUSEHOLD_MOBILE_TEAM = 'HOUSEHOLD_MOBILE_TEAM'
-    OTHER = 'OTHER'
-
     STATUS = (
         (PENDING, _('Pending')),
         (COMPLETED, _('Completed'))
@@ -422,17 +453,15 @@ class Transfer(TimeStampedModel, models.Model):
         (SURPLUS, _('Surplus')),
     )
 
-    DISPENSE_TYPE = (
-        (PHARMACY, _('Pharmacy')),
-        (MOBILE_OTP, _('Mobile OTP')),
-        (DISPENSING_UNIT, _('Dispensing Unit')),
-        (HOUSEHOLD_MOBILE_TEAM, _('Household Mobile Team')),
-        (OTHER, _('Other')),
-    )
-
     unicef_release_order = models.CharField(max_length=255, unique=True, null=True)
     name = models.CharField(max_length=255, null=True, blank=True)
-    dispense_type = models.CharField(max_length=30, choices=DISPENSE_TYPE, null=True, blank=True)
+    dispense_type = models.ForeignKey(
+        DispensingPointType,
+        verbose_name=_("Dispensing Point Type"),
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='transfers'
+    )
     transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True, blank=True)
     transfer_subtype = models.CharField(max_length=30, choices=TRANSFER_SUBTYPE, null=True, blank=True)
     status = models.CharField(max_length=30, choices=STATUS, default=PENDING)

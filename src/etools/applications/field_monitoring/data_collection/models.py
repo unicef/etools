@@ -156,6 +156,28 @@ class ActivityQuestionOverallFinding(models.Model):
     def __str__(self):
         return '{} - {}'.format(self.activity_question, self.value)
 
+    def get_level_and_target(self):
+        aq = self.activity_question
+        if not aq or not aq.question_id:
+            return None, None
+        question = aq.question
+        dynamic_options_type = getattr(question, 'other', {}).get('dynamic_options_type', None)
+        if not dynamic_options_type:
+            return None, None, None
+        level = None
+        target = None
+        if aq.intervention_id:
+            level = 'intervention'
+            target = aq.intervention
+        elif aq.cp_output_id:
+            level = 'output'
+            target = aq.cp_output
+        elif aq.partner_id:
+            level = 'partner'
+            target = aq.partner
+
+        return dynamic_options_type, level, target
+
 
 class ChecklistOverallFindingQuerySet(models.QuerySet):
     def annotate_for_activity_export(self):
