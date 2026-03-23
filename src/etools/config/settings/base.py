@@ -245,6 +245,7 @@ TENANT_APPS = (
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
+    'etools.applications.audit_log',
     'etools.applications.last_mile',
     'etools.applications.governments',
     'etools.applications.rss_admin'

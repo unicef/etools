@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse
-from django.urls import reverse
+from django.urls import reverse_lazy
 from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.translation.trans_real import get_languages
@@ -27,7 +27,7 @@ ANONYMOUS_ALLOWED_URL_FRAGMENTS = [
     'monitoring',
 ]
 
-INACTIVE_WORKSPACE_URL = reverse('workspace-inactive')
+INACTIVE_WORKSPACE_URL = reverse_lazy('workspace-inactive')
 
 _thread_locals = threading.local()
 
@@ -71,7 +71,7 @@ class EToolsTenantMiddleware(TenantMainMiddleware):
         if not request.user:
             return None
 
-        if INACTIVE_WORKSPACE_URL in request.path:
+        if str(INACTIVE_WORKSPACE_URL) in request.path:
             return None
 
         if request.user.is_anonymous:

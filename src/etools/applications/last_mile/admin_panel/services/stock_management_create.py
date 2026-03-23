@@ -1,5 +1,6 @@
 from django.utils import timezone
 
+from etools.applications.audit_log.service import bulk_audit_log
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import TRANSFER_MANUAL_CREATION_NAME
 
@@ -17,6 +18,7 @@ class StockManagementCreateService:
             - location (models.Location),
             - partner_organization (models.PartnerOrganization)
         """
+        user = validated_data.get('created_by')
         items = validated_data.pop('items', [])
         validated_data['unicef_release_order'] = f"{TRANSFER_MANUAL_CREATION_NAME} {timezone.now().strftime('%d-%m-%Y %H:%M:%S.%f')}"
         validated_data['transfer_type'] = models.Transfer.DELIVERY
@@ -39,5 +41,6 @@ class StockManagementCreateService:
                     expiry_date=item.get('expiration_date') or item.get('expiry_date'),
                 )
             )
-        models.Item.objects.bulk_create(items_to_create)
+        created_items = models.Item.objects.bulk_create(items_to_create)
+        bulk_audit_log(created_items, 'CREATE', user=user)
         return instance

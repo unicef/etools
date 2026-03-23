@@ -9,6 +9,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_gis.fields import GeometryField
 
+from etools.applications.audit_log.service import bulk_audit_log_with_values
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import (
@@ -717,7 +718,32 @@ class UserPointOfInterestAdminSerializer(serializers.ModelSerializer):
         poi_list = validated_data.pop('point_of_interest', None)
         if poi_list is not None:
             partner = instance.profile.organization.partner
+            old_poi_ids = set(partner.points_of_interest.values_list('pk', flat=True))
             partner.points_of_interest.set(poi_list)
+            new_poi_ids = {poi.pk for poi in poi_list}
+            if old_poi_ids != new_poi_ids:
+                requesting_user = self.context['request'].user
+                added = new_poi_ids - old_poi_ids
+                removed = old_poi_ids - new_poi_ids
+                entries = []
+                for poi in poi_list:
+                    if poi.pk in added:
+                        entries.append({
+                            'instance': poi, 'action': 'UPDATE',
+                            'changed_fields': ['assigned_to_partner'],
+                            'old_values': {'assigned_to_partner': False},
+                            'new_values': {'assigned_to_partner': True},
+                            'description': f'Assigned to user {instance.email}',
+                        })
+                for removed_poi in models.PointOfInterest.objects.filter(pk__in=removed):
+                    entries.append({
+                        'instance': removed_poi, 'action': 'UPDATE',
+                        'changed_fields': ['assigned_to_partner'],
+                        'old_values': {'assigned_to_partner': True},
+                        'new_values': {'assigned_to_partner': False},
+                        'description': f'Unassigned from user {instance.email}',
+                    })
+                bulk_audit_log_with_values(entries, user=requesting_user)
             instance.save()
 
         return instance
