@@ -122,8 +122,12 @@ class VisionLMSMExport(APIView):
         except InvalidDateFormatError as e:
             return Response({"last_modified": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+        field_renames = None
+        if model_type == 'transfer':
+            field_renames = {'dispense_type_name': 'dispense_type', 'dispense_type_id': None}
+
         response = StreamingHttpResponse(
-            stream_queryset_as_json(queryset, chunk_size=chunk_size),
+            stream_queryset_as_json(queryset, chunk_size=chunk_size, field_renames=field_renames),
             content_type='application/json'
         )
 
