@@ -122,7 +122,7 @@ class VisionLMSMExport(APIView):
         except InvalidDateFormatError as e:
             return Response({"last_modified": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        field_renames = None
+        field_renames = {}
         if model_type == 'transfer':
             field_renames = {'dispense_type_name': 'dispense_type', 'dispense_type_id': None}
 

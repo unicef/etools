@@ -10,7 +10,7 @@ def stream_queryset_as_json(
     queryset: QuerySet,
     chunk_size: int = 1000,
     buffer_size: int = 50,
-    field_renames: dict = None,
+    field_renames: dict = {},
 ) -> Iterator[str]:
 
     yield '['
