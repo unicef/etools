@@ -180,6 +180,29 @@ class ActionPointRssAdminTestCase(BaseTenantTestCase):
         # Verify the attachment is linked to the comment
         self.assertEqual(list(comment.supporting_document.all()), [attachment])
 
+    def test_patch_action_point_reopen_completed(self):
+        action_point = ActionPointFactory(
+            assigned_to=UserFactory(),
+            status='pre_completed',
+            comments__count=1,
+        )
+        action_point.complete()
+        action_point.save()
+        self.assertIsNotNone(action_point.date_of_completion)
+
+        url = reverse('rss_admin:rss-admin-action-points-detail', args=[action_point.id])
+        response = self.forced_auth_req(
+            'patch',
+            url,
+            user=self.rss_admin,
+            data={'status': ActionPoint.STATUS_OPEN},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        action_point = ActionPoint.objects.get(pk=action_point.pk)
+        self.assertEqual(action_point.status, ActionPoint.STATUS_OPEN)
+        self.assertIsNone(action_point.date_of_completion)
+
     def test_action_point_logs_endpoint(self):
         """Test that action point logs endpoint returns log entries"""
         action_point = ActionPointFactory(assigned_to=UserFactory())

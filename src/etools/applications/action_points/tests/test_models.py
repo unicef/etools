@@ -43,6 +43,20 @@ class TestActionPointModel(BaseTenantTestCase):
         action_point.save()
         self.assertIsNotNone(action_point.date_of_completion)
 
+    def test_reopen_clears_completion_date(self):
+        # Put the action point into a completed state via the FSM transition,
+        # so MonitorField(date_of_completion) is correctly populated.
+        action_point = ActionPointFactory(status='pre_completed')
+        action_point.complete()
+        action_point.save()
+        self.assertIsNotNone(action_point.date_of_completion)
+
+        action_point.reopen()
+        action_point.save()
+
+        self.assertEqual(action_point.status, ActionPoint.STATUS_OPEN)
+        self.assertIsNone(action_point.date_of_completion)
+
     def test_audit_related(self):
         action_point = ActionPointFactory(engagement=MicroAssessmentFactory())
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.audit)

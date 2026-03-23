@@ -852,6 +852,24 @@ class ActionPointRssDetailSerializer(WritableNestedSerializerMixin, serializers.
             'related_object_str', 'related_object_url', 'potential_verifier', 'verified_by', 'is_adequate',
         ]
 
+    def update(self, instance, validated_data):
+        requested_status = validated_data.get('status', None)
+        reopen_requested = (
+            requested_status == ActionPoint.STATUS_OPEN
+            and instance.status == ActionPoint.STATUS_COMPLETED
+        )
+
+        if reopen_requested:
+            validated_data.pop('status', None)
+
+        instance = super().update(instance, validated_data)
+
+        if reopen_requested:
+            instance.reopen()
+            instance.save(update_fields=['status', 'date_of_completion'])
+
+        return instance
+
 
 class HactActivityQuestionSerializer(serializers.ModelSerializer):
     """Serializer for HACT questions with answer options."""

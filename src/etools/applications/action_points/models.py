@@ -276,6 +276,11 @@ class ActionPoint(TimeStampedModel):
     def complete(self, completed_by=None):
         self._do_complete(completed_by=completed_by)
 
+    @transition(status, source=STATUSES.completed, target=STATUSES.open,
+                permission=has_action_permission(action='reopen'))
+    def reopen(self):
+        self.date_of_completion = None
+
 
 PME = GroupWrapper(code='pme',
                    name='PME')
