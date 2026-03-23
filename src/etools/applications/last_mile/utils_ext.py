@@ -9,7 +9,8 @@ from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 def stream_queryset_as_json(
     queryset: QuerySet,
     chunk_size: int = 1000,
-    buffer_size: int = 50
+    buffer_size: int = 50,
+    field_renames: dict = {},
 ) -> Iterator[str]:
 
     yield '['
@@ -20,6 +21,12 @@ def stream_queryset_as_json(
     first = True
 
     for item in iterator:
+        for old_key, new_key in field_renames.items():
+            if old_key in item:
+                if new_key is None:
+                    del item[old_key]
+                else:
+                    item[new_key] = item.pop(old_key)
         if first:
             buffer.write(encoder.encode(item))
             first = False
