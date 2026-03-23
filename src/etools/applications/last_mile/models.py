@@ -306,18 +306,17 @@ class PointOfInterest(TimeStampedModel, models.Model):
         return self.poi_type.category.lower() == 'warehouse' if self.poi_type else False
 
     def _autogenerate_pcode(self):
-        tenant_name = connection.schema_name
+        tenant = connection.tenant
+        start_p_code = (tenant.country_short_code if tenant else '') or 'pub'
+        start_p_code = start_p_code.upper()
 
-        if tenant_name:
-            start_p_code = tenant_name[:3]
-        else:
-            start_p_code = 'pub'
+        last_location = PointOfInterest.all_objects.filter(
+            p_code__istartswith=start_p_code
+        ).only('p_code').order_by('-created').first()
 
-        last_location = PointOfInterest.all_objects.filter(p_code__istartswith=start_p_code).only('p_code').order_by('-created').first()
-
-        if last_location and last_location.p_code.startswith(start_p_code):
-            last_p_code = int(last_location.p_code.split(start_p_code)[-1])
-            next_p_code = last_p_code + 1
+        if last_location:
+            numeric_part = last_location.p_code[len(start_p_code):]
+            next_p_code = int(numeric_part) + 1 if numeric_part.isdigit() else 1
         else:
             next_p_code = 1
 

@@ -857,8 +857,8 @@ class TestLocationsViewSet(BaseTenantTestCase):
         last_2_pois = models.PointOfInterest.objects.order_by("-created")[:2]
         first_poi = last_2_pois[1]
         second_poi = last_2_pois[0]
-        self.assertEqual(first_poi.p_code, "tes000000001")
-        self.assertEqual(second_poi.p_code, "tes000000002")
+        self.assertEqual(first_poi.p_code, "TST000000001")
+        self.assertEqual(second_poi.p_code, "TST000000002")
 
     def test_create_location_with_multiple_partner_organizations(self):
         payload = {
